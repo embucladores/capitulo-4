@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embucladores 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="logo.png">
+
+<style>
+/* Variables y Reset */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --theme-main: #c9a227;
+  --theme-glow: #ffe066;
+  --bg-dark: #06070e;
+  --panel-bg: rgba(8, 9, 18, 0.85);
+  --border-light: rgba(255,255,255,0.1);
+  
+  --font-main: 'Orbitron', sans-serif;
+  --font-text: 'Rajdhani', sans-serif;
+  
+  --viajero-color: #ff6600; 
+  --blanco-color: #ffffff;
+  --rey-color: #5bb8e8;
+  --embucladores-color: #a855f7; /* Morado para Embucladores */
+
+  /* Nuevos colores para la Terminal */
+  --white-glow: #e0e0e0;
+  --cel: #5bb8e8;
+  --gold-glow: #ffd700;
+}
+
+html, body {
+  font-family: var(--font-main);
+  background-color: transparent;
+  color: #ccc;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------------- PUNTERO PERSONALIZADO (Solo PC) ---------------- */
+@media (min-width: 769px) {
+  body, button, a, input, .nav-item, .msg-header, .spoiler {
+    cursor: none !important;
+  }
+  .custom-cursor, .custom-cursor-follower { display: block !important; }
+}
+.custom-cursor {
+  position: fixed; top: 0; left: 0; width: 6px; height: 6px;
+  background: var(--theme-main); border-radius: 50%;
+  pointer-events: none; z-index: 100000;
+  transform: translate(-50%, -50%); transition: transform 0.1s;
+  display: none; box-shadow: 0 0 10px var(--theme-glow);
+}
+.custom-cursor-follower {
+  position: fixed; top: 0; left: 0; width: 30px; height: 30px;
+  border: 1px solid var(--theme-main); border-radius: 50%;
+  pointer-events: none; z-index: 99999;
+  transform: translate(-50%, -50%); 
+  transition: width 0.2s, height 0.2s, background 0.2s, border-color 0.2s;
+  display: none; box-shadow: 0 0 15px rgba(201, 162, 39, 0.3);
+}
+.cursor-hover { 
+  background: rgba(201, 162, 39, 0.15); width: 45px; height: 45px; 
+  border-color: var(--theme-glow);
+}
+
+/* Background General */
+#global-bg {
+  position: fixed; 
+  inset: 0; 
+  z-index: -2;
+  background-color: #06070e;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transition: background-image 0.5s ease-in-out;
+}
+#global-overlay {
+  position: fixed; inset: 0; z-index: -1;
+  background: rgba(0, 0, 0, 0.6);
+}
+#canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+/* Animaciones Globales */
+@keyframes pulse { 0%, 100% {transform: scale(1);} 50% {transform: scale(1.05);} }
+@keyframes float { 
+  0%, 100% {transform: translateY(0px);} 
+  50% {transform: translateY(-15px);} 
+}
+
+/* Scroll Global Activado (Terminal) */
+body.global-scroll-active { overflow-y: auto; height: auto; }
+body.global-scroll-active .app-container { height: auto; overflow: visible; }
+body.global-scroll-active .section { position: relative; height: auto; min-height: 100vh; overflow: visible; margin-bottom: 50px; }
+
+/* ---------------- PANTALLA DE CARGA ---------------- */
+#loading-screen {
+  position: fixed; inset: 0; z-index: 90000;
+  background: url('./intro.png') no-repeat center center;
+  background-size: cover;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 1s ease, visibility 1s;
+}
+#loading-screen::before {
+  content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: -1;
+}
+.loading-content {
+  text-align: center; display: flex; flex-direction: column; align-items: center;
+}
+.big-logo { 
+  width: 100%; 
+  max-width: 600px; 
+  height: auto; 
+  filter: drop-shadow(0 0 20px var(--theme-glow)); 
+  margin-bottom: 20px; 
+  animation: pulse 2s infinite;
+}
+.loader-container {
+  display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 30px;
+}
+.loading-bar-wrapper {
+  width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; position: relative;
+}
+.loading-bar {
+  position: absolute; height: 100%; width: 30%; background: var(--theme-main); box-shadow: 0 0 10px var(--theme-glow);
+  border-radius: 10px; animation: bounceBar 1s infinite alternate ease-in-out;
+}
+@keyframes bounceBar {
+  0% { left: 0; width: 30%; }
+  100% { left: 70%; width: 30%; }
+}
+.loading-bar.done {
+  animation: none; left: 0; width: 100% !important; transition: width 0.3s ease;
+}
+
+.enter-btn {
+  opacity: 0; pointer-events: none; transform: translateY(20px);
+  padding: 10px 30px; background: var(--theme-main); color: #000; font-family: var(--font-main); font-weight: bold; text-transform: uppercase; border: none; border-radius: 4px; transition: 0.4s; box-shadow: 0 0 15px var(--theme-glow); margin-top: 10px;
+}
+.enter-btn.ready { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.enter-btn:hover { transform: scale(1.1); background: #fff; box-shadow: 0 0 25px #fff; }
+
+/* ---------------- NAVEGACIÓN Y BOTONES FIJOS ---------------- */
+#settings-btn {
+  position: fixed; top: 20px; left: 20px; z-index: 5000;
+  background: var(--panel-bg); border: 1px solid var(--theme-main); color: var(--theme-main);
+  width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; backdrop-filter: blur(10px); transition: 0.3s;
+}
+#settings-btn:hover { background: var(--theme-main); color: #000; transform: rotate(90deg); }
+
+.top-nav-wrapper {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 5000;
+  display: flex; align-items: center; gap: 5px; 
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  background: var(--panel-bg);
+  backdrop-filter: blur(10px);
+  padding: 5px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  width: max-content;
+  max-width: 95vw;
+}
+.top-nav-wrapper.hidden { transform: translate(-50%, -150%); }
+
+.toggle-nav-btn {
+  background: transparent; 
+  border: none; color: #fff;
+  width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1.2rem;
+}
+.toggle-nav-btn:hover { color: var(--theme-main); }
+
+#show-nav-btn {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 4999;
+  background: var(--panel-bg); border: none; color: #fff;
+  width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+  opacity: 0; pointer-events: none; transition: 0.3s; font-size: 1.2rem;
+}
+#show-nav-btn.visible { opacity: 1; pointer-events: auto; }
+
+.nav-menu {
+  display: flex; gap: 10px; background: transparent; padding: 0;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; padding: 5px 10px; transition: 0.3s; color: #aaa;
+}
+.nav-item i { font-size: 1.2rem; margin-bottom: 3px; font-style: normal; }
+.nav-item span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+.nav-item:hover, .nav-item.active { color: var(--theme-main); transform: scale(1.1); }
+
+@media (max-width: 768px) {
+  .top-nav-wrapper { padding: 5px 10px; }
+  .nav-item span { display: none; }
+  .nav-item { padding: 8px; }
+  .nav-item i { margin-bottom: 0; font-size: 1.3rem; }
+  .big-logo { width: 80vw; max-width: 350px; }
+}
+
+.app-container {
+  position: relative; width: 100%; height: 100vh; overflow: hidden;
+}
+.section {
+  position: absolute; inset: 0; padding: 100px 20px 40px; overflow-y: auto; overflow-x: hidden;
+  opacity: 0; pointer-events: none; transform: translateY(20px); transition: opacity 0.5s, transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex; flex-direction: column; align-items: center;
+}
+.section.active { opacity: 1; pointer-events: auto; transform: translateY(0); z-index: 10; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+::-webkit-scrollbar-thumb { background: var(--theme-main); border-radius: 4px; }
+
+/* ---------------- SECCIÓN: INICIO ---------------- */
+.inicio-content {
+  flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+
+/* ---------------- SECCIÓN: PERSONAJES ---------------- */
+.section-title { font-size: 2rem; color: #fff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 10px var(--theme-glow); text-align: center; border-bottom: 2px solid var(--theme-main); padding-bottom: 10px;}
+
+/* Filtros de Personajes */
+.char-filters { display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 10px 25px; font-family: var(--font-main); font-size: 1rem; font-weight: bold; text-transform: uppercase;
+  background: transparent; color: var(--theme-main); border: 2px solid var(--theme-main); border-radius: 6px; transition: 0.3s;
+}
+.filter-btn:hover { background: rgba(201, 162, 39, 0.2); box-shadow: 0 0 15px var(--theme-glow); }
+.filter-btn.active { background: var(--theme-main); color: #000; box-shadow: 0 0 20px var(--theme-glow); }
+
+.char-card {
+  width: 100%; max-width: 900px; background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px;
+  display: flex; flex-direction: column; margin-bottom: 30px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+  animation: fadeIn 0.5s ease-in-out;
+}
+@media (min-width: 768px) {
+  .char-card { flex-direction: row; }
+  .char-card:nth-child(even) { flex-direction: row-reverse; }
+}
+
+/* --- ESTILOS DE IMAGEN DE PERSONAJES ACTUALIZADOS --- */
+.char-img-box {
+  width: 100%; 
+  height: 250px; /* Alto fijo en móviles */
+  background: rgba(0,0,0,0.5); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 20px;
+}
+@media (min-width: 768px) { 
+  .char-img-box { 
+    width: 350px; /* Ancho fijo forzado en PC */
+    height: 350px; /* Alto fijo forzado en PC */
+    min-height: 350px; 
+    flex-shrink: 0; /* Evita que el contenedor se encoja por el contenido flex */
+  } 
+}
+.char-img-box img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: contain; /* Ajusta la imagen sin deformarla */
+  filter: drop-shadow(0 0 15px currentColor); 
+  animation: float 4s infinite ease-in-out;
+  will-change: transform;
+}
+
+.char-info { padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.char-info h2 { font-size: 2rem; margin-bottom: 5px; }
+.char-info h4 { font-size: 1.1rem; font-family: var(--font-text); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; color: #aaa; }
+.char-info p { font-size: 1.05rem; line-height: 1.6; font-family: var(--font-text); color: #ddd; font-weight: 500;}
+
+/* ---------------- SECCIÓN: RIVALIDAD (DUELO) ---------------- */
+.duelo-wrapper { width: 100%; max-width: 1200px; background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 30px 20px; text-align: center; }
+.rivalry-desc { font-family: var(--font-text); font-size: 1.15rem; color: #eee; margin-bottom: 20px; line-height: 1.5; font-weight: 500;}
+.rivalry-divider { border: none; border-bottom: 2px solid var(--theme-main); width: 80%; margin: 0 auto 20px; opacity: 0.6;}
+.voto-subtitle { font-size: 0.9rem; color: #a0d8f5; margin-bottom: 30px; letter-spacing: 1.5px; text-transform: uppercase; font-family: var(--font-text); font-weight: bold;}
+
+.fighters { display: flex; flex-direction: column; gap: 20px; }
+/* Grid actualizado a 4 columnas principales (7 con los separadores) para los 4 contendientes */
+@media (min-width: 900px) { .fighters { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items: center; } }
+.fighter { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+.vs-divider { font-size: 1.8rem; color: var(--theme-main); opacity: 0.5; font-weight: 900; }
+.f-img-wrap { height: 180px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.f-img-wrap img { max-height: 100%; filter: drop-shadow(0 0 15px currentColor); animation: float 3.5s infinite ease-in-out; will-change: transform; }
+.f-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; }
+
+.btn-group { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 200px; }
+.btn-custom { padding: 12px; font-family: var(--font-main); font-size: 0.75rem; letter-spacing: 1px; border: none; border-radius: 4px; text-transform: uppercase; transition: 0.3s; color: #fff; }
+.btn-custom.info { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+.btn-custom.info:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+.btn-custom.vote { background: transparent; border: 1px solid var(--theme-main); color: var(--theme-main); }
+.btn-custom.vote:hover { background: rgba(201, 162, 39, 0.2); box-shadow: 0 0 15px rgba(201, 162, 39, 0.4); }
+.btn-custom.vote.active { background: var(--theme-main); color: #000; box-shadow: 0 0 20px var(--theme-glow); }
+
+.unvote-btn { margin-bottom: 20px; padding: 8px 20px; background: rgba(255, 76, 76, 0.1); color: #ff4c4c; border: 1px solid #ff4c4c; border-radius: 4px; font-family: var(--font-main); display: none; transition: 0.3s;}
+.unvote-btn:hover { background: rgba(255, 76, 76, 0.3); }
+
+/* ---------------- SECCIÓN: MENSAJES ---------------- */
+.msg-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 15px; }
+.msg-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-left: 4px solid var(--theme-main); border-radius: 6px; overflow: hidden; transition: 0.3s; }
+.msg-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
+.msg-header:hover { background: rgba(255,255,255,0.05); }
+.msg-title { font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+.msg-controls { display: flex; align-items: center; gap: 15px; }
+.msg-arrow { transition: transform 0.3s; color: var(--theme-main); font-size: 1.2rem; }
+.msg-card.expanded .msg-arrow { transform: rotate(180deg); }
+.msg-body { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); padding: 0 20px; }
+.msg-card.expanded .msg-body { max-height: 1000px; padding: 20px; transition: max-height 0.5s ease-in-out, padding 0.5s; border-top: 1px solid var(--border-light); }
+.msg-text { font-family: var(--font-text); font-weight: 500; line-height: 1.6; font-size: 1.05rem; margin-bottom: 20px; color: #ddd;}
+.msg-media { width: 100%; border-radius: 8px; border: 1px solid var(--border-light); background: #000; object-fit: cover; }
+.msg-footer-text { text-align: center; margin-top: 40px; font-size: 0.9rem; color: #888; font-family: var(--font-text); font-weight: 600; letter-spacing: 1px; }
+
+/* --- SPOILER TIPO DISCORD --- */
+.spoiler {
+  background-color: rgba(30, 31, 34, 0.9);
+  color: transparent;
+  border-radius: 4px;
+  padding: 0 4px;
+  user-select: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+.spoiler.revealed { background-color: rgba(201, 162, 39, 0.2); color: #fff; }
+.spoiler:hover:not(.revealed) { background-color: rgba(43, 45, 49, 0.9); }
+
+/* ---------------- AJUSTES / CARACTERÍSTICAS (MODAL) ---------------- */
+#settings-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); z-index: 10000;
+  display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.4s;
+}
+#settings-modal.active { opacity: 1; pointer-events: auto; }
+.settings-window {
+  width: 95%; max-width: 900px; height: 85vh; background: #0a0c14; border: 1px solid var(--theme-main); border-radius: 12px;
+  display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: 0.4s cubic-bezier(0.17, 0.84, 0.44, 1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+#settings-modal.active .settings-window { transform: scale(1); }
+.settings-header {
+  padding: 20px; background: rgba(201, 162, 39, 0.1); border-bottom: 1px solid var(--theme-main);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.settings-title { font-size: 1.5rem; color: var(--theme-main); letter-spacing: 2px; }
+.close-settings { font-size: 2rem; color: #fff; line-height: 1; }
+.close-settings:hover { color: #ff4c4c; }
+
+.settings-body { display: flex; flex: 1; overflow: hidden; flex-direction: column; }
+.settings-sidebar {
+  width: 100%; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-light);
+  display: flex; flex-direction: row; overflow-x: auto; justify-content: center;
+}
+.set-tab-btn {
+  padding: 15px; font-family: var(--font-main); color: #aaa; background: transparent; border: none; border-bottom: 3px solid transparent;
+  transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; white-space: nowrap; flex: 1; text-align: center;
+}
+.set-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.set-tab-btn.active { color: var(--theme-main); border-color: var(--theme-main); background: rgba(201, 162, 39, 0.05); }
+
+.settings-content { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
+.set-panel { display: none; animation: fadeIn 0.4s; }
+.set-panel.active { display: block; }
+.set-panel h3 { text-align: center; }
+
+/* Grid para Opciones (Música y Apariencia) */
+.options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 200px)); justify-content: center; gap: 20px; margin-bottom: 30px; }
+.opt-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: 8px; padding: 15px; text-align: center; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;}
+.opt-card:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-5px); }
+.opt-card.selected { border-color: var(--theme-main); box-shadow: 0 0 15px rgba(201, 162, 39, 0.2); }
+.opt-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; background: #000; }
+.opt-title { font-size: 0.85rem; color: #fff; margin-bottom: 5px; height: 30px; display: flex; align-items: center; justify-content: center;}
+.opt-desc { font-family: var(--font-text); font-weight: 500; font-size: 0.95rem; color: #aaa; margin-bottom: 15px; flex: 1;}
+.opt-btn { width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 4px; font-family: var(--font-main); font-size: 0.7rem; transition: 0.2s; }
+.opt-btn:hover { background: var(--theme-main); color: #000; }
+.opt-card.selected .opt-btn { background: var(--theme-main); color: #000; }
+
+.vol-control { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light); }
+.vol-btn { background: none; border: none; color: #fff; font-size: 1.5rem; transition: 0.2s; }
+.vol-btn:hover { color: var(--theme-main); }
+.vol-slider { flex: 1; -webkit-appearance: none; height: 6px; border-radius: 5px; background: rgba(255,255,255,0.1); outline: none; }
+.vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: var(--theme-main); box-shadow: 0 0 10px var(--theme-glow); }
+
+.toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light); }
+.switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider-toggle { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 24px; }
+.slider-toggle:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider-toggle { background-color: var(--theme-main); }
+input:checked + .slider-toggle:before { transform: translateX(26px); }
+
+/* ---------------- TERMINAL ---------------- */
+.term-wrapper { display: flex; flex-direction: column; height: 100%; font-family: monospace; }
+.term-out { flex: 1; background: #000; border: 1px solid var(--border-light); border-radius: 4px; padding: 15px; overflow-y: auto; margin-bottom: 10px; color: #a0d8f5; font-size: 0.9rem; line-height: 1.5; }
+.term-in-row { display: flex; align-items: center; background: #000; border: 1px solid var(--theme-main); border-radius: 4px; padding: 10px; }
+.term-prompt { color: var(--theme-main); margin-right: 10px; font-weight: bold; }
+.term-input { flex: 1; background: transparent; border: none; color: #fff; font-family: monospace; font-size: 1rem; outline: none; }
+
+/* Controles de terminal móvil */
+.term-mobile-controls {
+  display: none; gap: 10px; margin-top: 10px;
+}
+.term-mob-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); color: #ccc;
+  padding: 12px; border-radius: 4px; font-family: var(--font-main); flex: 1; transition: 0.3s;
+}
+.term-mob-btn:hover { background: rgba(255,255,255,0.1); color: var(--theme-main); }
+.term-mob-btn.send { background: var(--theme-main); color: #000; font-weight: bold; flex: 2; border-color: var(--theme-main); }
+.term-mob-btn.send:hover { background: #fff; box-shadow: 0 0 15px #fff; }
+@media (max-width: 768px) {
+  .term-mobile-controls { display: flex; }
+}
+
+/* ---------------- TOAST ---------------- */
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 60000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast { width: 300px; background: rgba(10, 12, 20, 0.95); border: 1px solid var(--theme-color, var(--theme-main)); border-radius: 6px; padding: 12px 15px; display: flex; align-items: center; animation: slideIn 0.4s forwards; pointer-events: auto; }
+.toast.hiding { animation: slideOut 0.4s forwards; }
+.toast-text { color: #fff; font-size: 0.9rem; font-weight: 600; flex: 1; font-family: var(--font-text); }
+.toast-close { color: #fff; opacity: 0.6; margin-left: 10px; font-size: 1.2rem; }
+@keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
+@keyframes slideOut { to { transform: translateX(120%); } }
+
+.hidden { display: none !important; }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+</style>
+</head>
+<body>
+
+<div class="custom-cursor" id="custom-cursor"></div>
+<div class="custom-cursor-follower" id="custom-cursor-follower"></div>
+
+<div id="global-bg"></div>
+<div id="global-overlay"></div>
+<canvas id="canvas"></canvas>
+
+<div id="loading-screen">
+  <div class="loading-content">
+    <img src="./logoprincipal.png" alt="Logo" class="big-logo">
+    <div class="loader-container">
+      <div class="loading-bar-wrapper">
+        <div class="loading-bar" id="load-bar"></div>
+      </div>
+      <button class="enter-btn" id="enter-btn" onclick="enterSite()">ENTRAR</button>
+    </div>
+  </div>
+</div>
+
+<button id="settings-btn" onclick="openSettings()" title="Características">⚙️</button>
+<button id="show-nav-btn" onclick="toggleNav()" title="Mostrar Navegación">▼</button>
+
+<div class="top-nav-wrapper" id="top-nav">
+  <button class="toggle-nav-btn" onclick="toggleNav()" title="Ocultar Navegación">▲</button>
+  <div class="nav-menu">
+    <div class="nav-item active" onclick="navTo('inicio')"><i>🏠</i><span>Inicio</span></div>
+    <div class="nav-item" onclick="navTo('personajes')"><i>👥</i><span>Personajes</span></div>
+    <div class="nav-item" onclick="navTo('duelo')"><i>⚔️</i><span>Rivalidad</span></div>
+    <div class="nav-item" onclick="navTo('mensajes')"><i>💬</i><span>Mensajes</span></div>
+  </div>
+</div>
+
+<div class="app-container" id="app-container">
+  <div class="section active" id="sec-inicio">
+    <div class="inicio-content">
+      <img src="./logoprincipal.png" alt="Logo" class="big-logo">
+    </div>
+  </div>
+
+  <div class="section" id="sec-personajes">
+    <h1 class="section-title">Información de Personajes</h1>
+    
+    <div class="char-filters">
+      <button class="filter-btn active" data-target="amenazas" onclick="renderCharacters('amenazas')">Amenazas</button>
+      <button class="filter-btn" data-target="embucladores" onclick="renderCharacters('embucladores')">Embucladores</button>
+    </div>
+
+    <div id="chars-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    </div>
+  </div>
+
+  <div class="section" id="sec-duelo">
+    <div class="duelo-wrapper">
+      <h1 class="section-title" style="border:none; margin-bottom: 10px;">Rivalidad en Battlewood</h1>
+      <p class="rivalry-desc">Un gran duelo que conducirá hacia la victoria al que obtenga los fragmentos.</p>
+      <hr class="rivalry-divider">
+      <p class="voto-subtitle">Vota a quién crees que se quedará con los fragmentos.</p>
+      <button class="unvote-btn" id="unvote-btn" onclick="removeVote()">QUITAR VOTO</button>
+
+      <div class="fighters">
+        <div class="fighter viajero">
+          <div class="f-name" style="color:var(--viajero-color)">Viajero Oscuro</div>
+          <div class="f-img-wrap"><img src="./viajero.png" style="color:var(--viajero-color)"></div>
+          <div class="btn-group">
+            <button class="btn-custom info" onclick="goToCharacter('viajero')">✦ INFO</button>
+            <button class="btn-custom vote" id="vote-viajero" onclick="castVote('viajero')">VOTAR</button>
+          </div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="fighter blanco">
+          <div class="f-name" style="color:var(--blanco-color)">Victor Chávez</div>
+          <div class="f-img-wrap"><img src="./victor.png" style="color:var(--blanco-color)"></div>
+          <div class="btn-group">
+            <button class="btn-custom info" onclick="goToCharacter('victor')">✦ INFO</button>
+            <button class="btn-custom vote" id="vote-victor" onclick="castVote('victor')">VOTAR</button>
+          </div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="fighter rey">
+          <div class="f-name" style="color:var(--rey-color)">Rey Helado</div>
+          <div class="f-img-wrap"><img src="./rey.png" style="color:var(--rey-color)"></div>
+          <div class="btn-group">
+            <button class="btn-custom info" onclick="goToCharacter('rey')">✦ INFO</button>
+            <button class="btn-custom vote" id="vote-rey" onclick="castVote('rey')">VOTAR</button>
+          </div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="fighter embucladores">
+          <div class="f-name" style="color:var(--embucladores-color)">Embucladores</div>
+          <div class="f-img-wrap"><img src="./embucladores.png" style="color:var(--embucladores-color)"></div>
+          <div class="btn-group">
+            <button class="btn-custom info" onclick="navTo('personajes'); renderCharacters('embucladores');">✦ INFO</button>
+            <button class="btn-custom vote" id="vote-embucladores" onclick="castVote('embucladores')">VOTAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-mensajes">
+    <h1 class="section-title">Bandeja de Mensajes</h1>
+    <div class="msg-container" id="msg-container">
+      <div class="msg-card" id="msg-1">
+        <div class="msg-header" onclick="toggleMsg('msg-1')">
+          <div class="msg-title">Transmisión sobre anomalías</div>
+          <div class="msg-controls"><div class="msg-arrow">▼</div></div>
+        </div>
+        <div class="msg-body">
+          <p class="msg-text">Despúes de la victoria de la gran batalla en esta isla, ya había asimilado todas las amenazas, y anomalías extrañas que han transcurrido durante años en la Realidad Cero. Estaba acostumbrado a verlo todo durante mis casi cien años, pero... lo que he visto... eh... me deja sorprendido...
+Al fin llevaba una vida normal, con mi cuerpo cinético, pero al final de todo, una vida normal. Hasta que en unos de mis paseos, me tope con un elemento... fuera de lo común en esta isla, y mira que hay, eh... 
+Pero este, parpadeaba, era inestable, no paraban de hacer movimientos extraños, como si estuviera vivo. De hecho, en uno de los momentos en donde no estaba fijado en ese elemento, derrepente apareció otro... y... no se que es esto... Totalmente sorprendido...
+Al principio pensé que era por parte del Punto Cero, pero el Punto Cero se ve normal. Sin brechas, sin emitir ruidos raros... una forma estable... pero esto, no tenía nada que ver, no daba la misma sensación de efecto que con otra elemento común transportado aquí...
+Tendría que pedir ayuda... puede ser... ¡a los Siete! ¡Sí, eso es! Aunque bueno, ellos también están retirados vendiendo y reparando chatarrería... así que, no sé...
+
+No se, lo mejor será esperar... a lo mejor es otra cosa completamente d-----------__--__...
+<br><br>
+<span class="spoiler" onclick="this.classList.toggle('revealed')">Este universo, está sentenciado. Ha pasado, lo que nunca tenía que haber pasado. Mi existencia eterna, está apunto de terminar. Mi legado de seguirlo absolutamente todo, está apunto de acabar. Aunque, el legado de otros héroes podrá seguir, si se sigue la única opción para salir de este condenado universo. </span></p>
+<br>
+          <video class="msg-media" id="glitch-video" controls preload="metadata" poster="./miniatura_video.png">
+            <source src="./videoglitch.mp4#t=0.001" type="video/mp4">
+            Tu navegador no soporta videos.
+          </video>
+        </div>
+      </div>
+      <p class="msg-footer-text">Por ahora solo están estos mensajes.</p>
+    </div>
+  </div>
+</div>
+
+<div id="settings-modal" onclick="if(event.target==this) closeSettings()">
+  <div class="settings-window">
+    <div class="settings-header">
+      <span class="settings-title">CARACTERÍSTICAS DEL SISTEMA</span>
+      <span class="close-settings" onclick="closeSettings()">&times;</span>
+    </div>
+    <div class="settings-body">
+      <div class="settings-sidebar">
+        <button class="set-tab-btn active" onclick="switchSetTab('music')">🎵 MÚSICA</button>
+        <button class="set-tab-btn" onclick="switchSetTab('aspect')">🎨 APARIENCIA</button>
+        <button class="set-tab-btn" onclick="switchSetTab('term')">💻 TERMINAL</button>
+      </div>
+      <div class="settings-content">
+        
+        <div class="set-panel active" id="tab-music">
+          <h3 style="color:#fff; margin-bottom:15px; text-transform:uppercase;">Selección de Música</h3>
+          <div class="options-grid" id="music-grid"></div>
+          <h3 style="color:#fff; margin:20px 0 10px; text-transform:uppercase;">Volumen General</h3>
+          <div class="vol-control">
+            <button class="vol-btn" onclick="setVolume(0)">🔇</button>
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.05" value="0.5">
+            <button class="vol-btn" onclick="setVolume(1)">🔊</button>
+          </div>
+        </div>
+
+        <div class="set-panel" id="tab-aspect">
+          <h3 style="color:#fff; margin-bottom:15px; text-transform:uppercase;">Fondo de página</h3>
+          <div class="options-grid" id="bg-grid"></div>
+          <h3 style="color:#fff; margin:20px 0 10px; text-transform:uppercase;">Efectos Visuales</h3>
+          <div class="toggle-row">
+            <span style="font-family:var(--font-text); font-weight: 500; font-size: 1.1rem; color:#ccc;">Cenizas</span>
+            <label class="switch">
+              <input type="checkbox" id="particle-toggle" checked onchange="toggleParticles()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="set-panel" id="tab-term" style="height: 100%;">
+          <div class="term-wrapper">
+            <div class="term-out" id="term-out">
+              <div style="color: var(--theme-main);">> BATTLEWOOD_OS v2.0 - Terminal Integrada</div>
+              <div>> Escribe 'help' para ver los comandos disponibles.</div>
+            </div>
+            <div class="term-in-row">
+              <span class="term-prompt">></span>
+              <input type="text" class="term-input" id="term-in" autocomplete="off" spellcheck="false" onkeydown="handleTermKey(event)">
+            </div>
+            <div class="term-mobile-controls">
+              <button class="term-mob-btn" onclick="termHistoryUp()">▲</button>
+              <button class="term-mob-btn" onclick="termHistoryDown()">▼</button>
+              <button class="term-mob-btn send" onclick="runCmd()">ENVIAR</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="bgMusic" loop><source id="musicSource" src="./Fortnite.mp3" type="audio/mpeg"></audio>
+<div id="toast-container"></div>
+
+<script>
+// --- LÓGICA DE PUNTERO CUSTOM ---
+const cursor = document.getElementById('custom-cursor');
+const follower = document.getElementById('custom-cursor-follower');
+let curX = 0, curY = 0, folX = 0, folY = 0;
+
+if (window.matchMedia("(min-width: 769px)").matches) {
+  window.addEventListener('mousemove', e => {
+    curX = e.clientX; curY = e.clientY;
+    cursor.style.left = curX + 'px'; cursor.style.top = curY + 'px';
+  });
+  function animateFollower() {
+    folX += (curX - folX) * 0.2; folY += (curY - folY) * 0.2;
+    follower.style.left = folX + 'px'; follower.style.top = folY + 'px';
+    requestAnimationFrame(animateFollower);
+  }
+  animateFollower();
+
+  // Aplicar efecto de hover dinámico
+  const addHoverEffects = () => {
+    document.querySelectorAll('button, a, input, .nav-item, .msg-header, .spoiler').forEach(el => {
+      if(!el.dataset.hoverBound) {
+        el.addEventListener('mouseenter', () => follower.classList.add('cursor-hover'));
+        el.addEventListener('mouseleave', () => follower.classList.remove('cursor-hover'));
+        el.dataset.hoverBound = "true";
+      }
+    });
+  };
+  // Ejecutar inicial y luego en un intervalo para los elementos renderizados dinámicamente
+  setTimeout(addHoverEffects, 1000); 
+  setInterval(addHoverEffects, 2000); 
+}
+
+
+// --- BASE DE DATOS DE PERSONAJES ---
+const charData = {
+  // --- AMENAZAS (Antes Rivales) ---
+  viajero: { category: "amenazas", id: "viajero", name: "Viajero Oscuro", subtitle: "Visitante malicioso de otro mundo", img: "./viajero.png", color: "var(--viajero-color)", desc: "Variante del Viajero del Universo Cero. Esta vez, va por solitario con su nave, llegando así al país de Battlewood. Ya que quiere hacerse con los fragmentos divididos del Punto Cero para poder potenciar su nave, y poder huir hacia otros planetas... según él..." },
+  victor: { category: "amenazas", id: "victor", name: "Victor Chávez", subtitle: "Magnate con reputación dudosa", img: "./victor.png", color: "var(--blanco-color)", desc: "Un hombre que le sobra el dinero debido a sus amañadas salas de juegos de apuesta, y a su oculto negocio de contrabando... el Punto Cero le ha hecho efecto a su cuerpo, y lo necesita para buscar una solución para arreglarse. Con métodos dudosos, obviamente." },
+  rey: { category: "amenazas", id: "rey", name: "Rey Helado", subtitle: "Soberano del Reino de Hielo", img: "./rey.png", color: "var(--rey-color)", desc: "Variante del Rey Helado del Universo Cero. Esta vez, es el malvado rey del Reino Helado, y no podía no aprovecharse de la oportunidad de conseguir los fragmentos divididos de algo muy poderoso... Por eso, llegó al país acompañado de un glaciar con su castillo." },
+  
+  // --- EMBUCLADORES ---
+  embuclador1: { category: "embucladores", id: "embuclador1", name: "El Visitante", subtitle: "El mejor piloto de cohetes de los Siete, en su universo...", img: "./visitante.png", color: "#2A41C9", desc: "Nuestro querido compañero Visitante, también llamado Peter, ha sido uno de los elegidos en sobrevivir y viajar a otro universo. El problema de eso, es que ahora el espacio exterior para él, es completamente desconocido... Pero mira lo bueno, sigue siendo un visitante de otro mundo." },
+  embuclador2: { category: "embucladores", id: "embuclador2", name: "La Fundación", subtitle: "Líder de los Siete, hace años...", img: "./fundacion.png", color: "#B6C21B", desc: "Después de tantos años de liderazgo y de proteger la realidad, la Fundación ya había asumido su retiro, teniendo una vida en paz después de siglos. Aunque no le duró mucho eso, ya que fue uno de los que sobrevivieron, y ahora tendrá que lidiar con otras amenazas con los Fragmentos del Punto Cero, y sin tener suficiente tecnología para enfrentarlos." },
+  embuclador3: { category: "embucladores", id: "embuclador3", name: "Helios", subtitle: "El dios del movimiento, que pudo moverse a otro universo...", img: "./helios.png", color: "#ffc107", desc: "El Semi-Dios del movimiento, ahora como el verdadero Dios del movimiento, ha intentado madurar lo mejor posible para que parezca un dios de verdad. Pero debido a la gran catástrofe que ha ocurrido en la isla, el tío se ha vuelto otra vez loco por saber la noticia de que el Universo Cero va a destruirse. Por suerte, fue uno de los que sobrevivieron y pudo irse a otro universo, aunque con consecuencias... no tiene sus poderes de dios." },
+  embuclador4: { category: "embucladores", id: "embuclador4", name: "Pentaqus", subtitle: "El salvador y creador del reloj del multiverso", img: "./pentaqus.png", color: "#e83e8c", desc: "El amigable Dios del equilibrio, ha estado esperando por años la inminente destruccion del Universo Cero, en ese tiempo ha estado perfeccionando el metodo de escape, el reloj del multiverso. Sin un universo que alimente su poder, Pentaqus actualmente cuenta con los mismos poderes que un humano convencional, practicamente cero. Su objetivo ahora es recuperar los Fragmentos del Punto Cero que cayeron en el camino de huida, ¿Para que exactamente? Eso aún no se sabe." }
+};
+
+// --- BASE DE DATOS MÚSICA Y FONDOS ---
+const musicTracks = [
+  { id: 't1', title: 'Tema del Capítulo 4', desc: 'Dale a reproducir, y busca los Fragmentos.', src: './Fortnite.mp3', img: './intro.png' },
+  { id: 't2', title: 'Rivalidad', desc: 'Estamos metidos en medio de una gran rivalidad....', src: './rival.mp3', img: './rivalnormal.jpg' },
+  { id: 't3', title: 'En acción', desc: 'Esto es más que conservar los fragmentos.', src: './epic.mp3', img: './rivalepico.png' },
+  { id: 't4', title: 'Una nueva aventura', desc: 'Nuevo mundo, nuevo universo.', src: './aventura.mp3', img: './aventura.webp' }
+];
+
+const bgs = [
+  { id: 'bg1', title: 'Capítulo 4', desc: 'Comienza una aventura más para los Embucladores.', src: './intro.png' },
+  { id: 'bg2', title: 'Rivalidad', desc: 'Nos estamos metiendo en medio de una gran batalla...', src: './islarival.jpg' },
+  { id: 'bg3', title: 'Vigilante Oscuro', desc: 'Desde miles de galaxias, se pueden ver los fragmentos.', src: './cosechadora.webp' },
+  { id: 'bg4', title: 'Reino de Hielo', desc: 'El primer paso para un mundo perfectamente frío.', src: './castillo.jpg' },
+  { id: 'bg5', title: 'Clasismo Cero', desc: 'Confíad en mí, y seréis extremadamente ricos.', src: './vegas.webp' }
+];
+
+// --- INICIALIZACIÓN Y CARGA ---
+window.onload = () => {
+  let bar = document.getElementById('load-bar');
+  let btn = document.getElementById('enter-btn');
+  
+  setTimeout(() => { 
+    bar.classList.add('done');
+    btn.classList.add('ready'); 
+  }, 1500);
+
+  renderCharacters('amenazas'); // Por defecto cargan las amenazas
+  renderSettings();
+  loadSavedData();
+};
+
+function enterSite() {
+  document.getElementById('loading-screen').style.opacity = '0';
+  setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 1000);
+  
+  let audio = document.getElementById('bgMusic');
+  if (audio.paused) audio.play().catch(e => console.log("Autoplay bloqueado"));
+}
+
+// --- NAVEGACIÓN ---
+function navTo(sectionId) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  document.querySelectorAll('.section').forEach(el => {
+    el.classList.remove('active');
+    setTimeout(() => { if(!el.classList.contains('active')) el.scrollTop = 0; }, 500);
+  });
+  document.getElementById('sec-' + sectionId).classList.add('active');
+}
+
+function toggleNav() {
+  const nav = document.getElementById('top-nav');
+  const showBtn = document.getElementById('show-nav-btn');
+  
+  if (nav.classList.contains('hidden')) {
+    nav.classList.remove('hidden');
+    showBtn.classList.remove('visible');
+  } else {
+    nav.classList.add('hidden');
+    showBtn.classList.add('visible');
+  }
+}
+
+// --- GENERAR PERSONAJES Y FILTROS ---
+function renderCharacters(filterCategory) {
+  const container = document.getElementById('chars-container');
+  container.innerHTML = ''; 
+  
+  // Actualizar estado de los botones
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.target === filterCategory) btn.classList.add('active');
+  });
+
+  Object.values(charData).forEach(char => {
+    if(char.category === filterCategory) {
+      const card = document.createElement('div');
+      card.className = 'char-card';
+      card.id = 'char-' + char.id;
+      card.innerHTML = `
+        <div class="char-img-box"><img src="${char.img}" style="color:${char.color}" alt="${char.name}"></div>
+        <div class="char-info">
+          <h2 style="color:${char.color}">${char.name}</h2>
+          <h4>${char.subtitle}</h4>
+          <p>${char.desc}</p>
+        </div>
+      `;
+      container.appendChild(card);
+    }
+  });
+}
+
+function goToCharacter(charId) {
+  document.querySelectorAll('.nav-item')[1].click(); 
+  
+  const targetChar = charData[charId];
+  if(targetChar) {
+    renderCharacters(targetChar.category);
+  }
+
+  setTimeout(() => {
+    const target = document.getElementById('char-' + charId);
+    if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 500);
+}
+
+function toggleMsg(id) {
+  const msg = document.getElementById(id);
+  msg.classList.toggle('expanded');
+}
+
+// --- SISTEMA DE VOTOS ---
+function castVote(charId) {
+  localStorage.setItem('embucladores_voto', charId);
+  updateVoteUI();
+  
+  // Tratamos el caso del grupo "Embucladores" para coger su propio nombre y color de la variable CSS
+  let name = charId === 'embucladores' ? 'Los Embucladores' : charData[charId].name;
+  let color = charId === 'embucladores' ? 'var(--embucladores-color)' : charData[charId].color;
+  
+  showToast(`Voto registrado a favor de: ${name}`, color);
+}
+
+function removeVote() {
+  localStorage.removeItem('embucladores_voto');
+  updateVoteUI();
+  showToast("Voto eliminado", "#ff4c4c");
+}
+
+function updateVoteUI() {
+  document.querySelectorAll('.btn-custom.vote').forEach(btn => {
+    btn.classList.remove('active');
+    btn.innerText = 'VOTAR';
+  });
+  
+  const saved = localStorage.getItem('embucladores_voto');
+  const unvoteBtn = document.getElementById('unvote-btn');
+  
+  if (saved) {
+    const btn = document.getElementById('vote-' + saved);
+    if(btn) {
+      btn.classList.add('active');
+      // Plural para los Embucladores
+      if (saved === 'embucladores') {
+          btn.innerText = 'SE LOS QUEDARÁN ELLOS';
+      } else {
+          btn.innerText = 'SE LOS QUEDARÁ ÉL';
+      }
+    }
+    unvoteBtn.style.display = 'inline-block';
+  } else {
+    unvoteBtn.style.display = 'none';
+  }
+}
+
+// --- CARACTERÍSTICAS (AJUSTES) ---
+function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
+
+function switchSetTab(tabId) {
+  document.querySelectorAll('.set-tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.set-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+function renderSettings() {
+  const mGrid = document.getElementById('music-grid');
+  musicTracks.forEach(m => {
+    mGrid.innerHTML += `
+      <div class="opt-card" id="mcard-${m.id}">
+        <img src="${m.img}" class="opt-img" alt="Portada de canción">
+        <div class="opt-title">${m.title}</div>
+        <div class="opt-desc">${m.desc}</div>
+        <button class="opt-btn" onclick="applyMusic('${m.id}')">APLICAR</button>
+      </div>
+    `;
+  });
+
+  const bgGrid = document.getElementById('bg-grid');
+  bgs.forEach(b => {
+    bgGrid.innerHTML += `
+      <div class="opt-card" id="bgcard-${b.id}">
+        <img src="${b.src}" class="opt-img" alt="Vista previa de fondo">
+        <div class="opt-title">${b.title}</div>
+        <div class="opt-desc">${b.desc}</div>
+        <button class="opt-btn" onclick="applyBg('${b.id}')">APLICAR</button>
+      </div>
+    `;
+  });
+
+  document.getElementById('vol-slider').addEventListener('input', (e) => {
+    document.getElementById('bgMusic').volume = e.target.value;
+    localStorage.setItem('embucladores_vol', e.target.value);
+  });
+}
+
+function applyMusic(mId) {
+  const track = musicTracks.find(t => t.id === mId);
+  const audio = document.getElementById('bgMusic');
+  document.getElementById('musicSource').src = track.src;
+  audio.load();
+  audio.play().catch(e=>{});
+  
+  document.querySelectorAll('#music-grid .opt-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('mcard-' + mId).classList.add('selected');
+  localStorage.setItem('embucladores_music', mId);
+}
+
+function setVolume(val) {
+  const s = document.getElementById('vol-slider');
+  s.value = val;
+  document.getElementById('bgMusic').volume = val;
+  localStorage.setItem('embucladores_vol', val);
+}
+
+function applyBg(bgId) {
+  const bg = bgs.find(b => b.id === bgId);
+  document.getElementById('global-bg').style.backgroundImage = `url('${bg.src}')`;
+  
+  document.querySelectorAll('#bg-grid .opt-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('bgcard-' + bgId).classList.add('selected');
+  localStorage.setItem('embucladores_bg', bgId);
+}
+
+function toggleParticles() {
+  particlesActive = document.getElementById('particle-toggle').checked;
+  localStorage.setItem('embucladores_part', particlesActive);
+  if(!particlesActive) ctx.clearRect(0,0,c.width,c.height);
+}
+
+// --- TERMINAL Y COMANDOS ---
+let terminalHistory = [];
+let historyIndex = -1;
+
+function termPrint(txt, col="#a0d8f5") {
+  const out = document.getElementById('term-out');
+  out.innerHTML += `<div style="color:${col}; margin-bottom:5px; font-family:monospace;">${txt}</div>`;
+  out.scrollTop = out.scrollHeight;
+}
+
+function handleTermKey(e) {
+  if(e.key === 'Enter') runCmd();
+  else if(e.key === 'ArrowUp') termHistoryUp();
+  else if(e.key === 'ArrowDown') termHistoryDown();
+}
+
+function termHistoryUp() {
+  if (terminalHistory.length === 0) return;
+  if (historyIndex < terminalHistory.length - 1) historyIndex++;
+  document.getElementById('term-in').value = terminalHistory[terminalHistory.length - 1 - historyIndex];
+}
+
+function termHistoryDown() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    document.getElementById('term-in').value = terminalHistory[terminalHistory.length - 1 - historyIndex];
+  } else if (historyIndex === 0) {
+    historyIndex = -1;
+    document.getElementById('term-in').value = '';
+  }
+}
+
+function runCmd() {
+  const inp = document.getElementById('term-in');
+  const cmdRaw = inp.value.trim();
+  if(!cmdRaw) return;
+  
+  terminalHistory.push(cmdRaw);
+  historyIndex = -1;
+  
+  termPrint("> " + cmdRaw, "#fff");
+  inp.value = '';
+  
+  const args = cmdRaw.toLowerCase().split(' ');
+  const base = args[0];
+  const param = args[1];
+
+  switch(base) {
+    case 'help':
+      termPrint("Comandos: /info [nombre], /vote [rival], /quitvote, clear");
+      break;
+    
+    case '/info':
+      if (param === 'battlewood') {
+        termPrint("El cinéfilo país Battlewood ha recibido varias anomalías últimamente debido a la inesperada aparición del Punto Cero e inmigrantes de otros planetas y universos. Para el planeta, era uno de los países más relajantes y al que todo el mundo iba a visitar, pero ahora es... una locura...", "#fff");
+      } else if (param === 'viajero') {
+        termPrint("SUJETO I: Viajero Oscuro. El primer ser en llegar de otro planeta o sistema. No se sabe si es una amenaza, o simplemente quiere los fragmentos del Punto Cero para poder salir del planeta. Los detectores avisan de que su nave está casi sin potencia, o sea que se piensa que es para eso.", "var(--viajero-color)");
+      } else if (param === 'chavez') {
+        termPrint("SUJETO II: Chávez. Su presencia ya era temible años atrás debido a su riqueza y control en el país, pero ahora, con la disponibilidad para obtener los fragmentos del Punto Cero, es más preocupante la situación. Su apariencia fue alterada por la anómala energía, se desconoce si hay una cura para eso.", "var(--white-glow)");
+      } else if (param === 'rey') {
+        termPrint("SUJETO III: Rey Helado. Conocido por ser uno de los controladores del mundo más poderosos, su presencia no era vista comúnmente, ya que lo hacía todo a las escondidas. Pero desde que aparecieron los fragmentos, ha utilizado su inmenso poder para adueñarse con una gran parte de Battlewood, llévandose su castillo principal.", "var(--cel)");
+      } else if (param === 'puntocero') {
+        termPrint("OBJETO DE UN ESPACIO DESCONOCIDO: Un gran fragmento impactó en la superfície de Battlewood hace unas semanas, como si fuera un meteorito. Al impactar, se dividió en tres pequeños fragmentos por los alrededores de la isla, y aún así, cada uno de ellos contiene la mayor fuente de energía detectada en la historia del planeta", "var(--gold-glow)");
+      } else if (param === 'visitante') {
+        termPrint("SUJETO PROVENTIENTE DE UN ESPACIO DESCONOCIDO I: Hombre de altura media con una armadura resistente y con apariencia de otro planeta, o incluso sistema. Sus intenciones desconocidas, aunque se puede suponer que viene a por los fragmentos..", "#ff4c4c");
+      } else if (param === 'fundacion') {
+        termPrint("SUJETO PROVENTIENTE DE UN ESPACIO DESCONOCIDO II: Hombre de altura alta con una armadura resistente y con apariencia de otro planeta, o incluso sistema. Como se puede ver en su descripción, es muy parecido al primer sujeto, dando así la respuesta de que son compañeros.", "#ff4c4c");
+      } else if (param === 'helios') {
+        termPrint("SUJETO PROVENTIENTE DE UN ESPACIO DESCONOCIDO III: Hombre de altura alta con armadura con estilo de caballero de era medieval. Podría parecer un simple disfraz, pero se puede ver que tiene efectos de fuego y de electricidad azul a su alrededor, incluyendo unas extrañas largas alas de pájaro a sus espaldas.", "#ff4c4c");
+      } else if (param === 'pentaqus') {
+        termPrint("SUJETO PROVENTIENTE DE UN ESPACIO DESCONOCIDO IV: Hombre de altura alta con traje morado con máscara de gas. Al comparar a los Sujetos I y II, se nota la similitud. En cambio, entre el Sujeto III y IV, hay diferencias en su apariencia.", "#ff4c4c");
+      } else if (param === 'lupokan') {
+        termPrint("Mascota y mano derecha personal de Victor Chávez. No hay mucho que decir de él, pero su presencia podría ayudar mucho a Chávez en la rivalidad.", "#ff4c4c");
+      } else if (!param) {
+        termPrint("Utilice después de la linea '/info' un nombre en específico.", "#fff");
+      } else {
+        termPrint("Parámetro no reconocido. Opciones válidas: battlewood, viajero, chavez, rey, puntocero, visitante, fundacion, helios, pentaqus, lupokan", "#ff4c4c");
+      }
+      break;
+
+    case '/vote':
+      // Se agregó 'embucladores' para que la terminal reconozca el voto
+      if(['viajero','victor','rey','embucladores'].includes(args[1])) {
+        castVote(args[1]); termPrint("Voto forzado: " + args[1], "var(--theme-main)");
+      } else termPrint("Rival inválido.", "#ff4c4c");
+      break;
+    case '/quitvote':
+      removeVote(); termPrint("Voto reseteado.", "var(--theme-main)");
+      break;
+    case 'clear':
+      document.getElementById('term-out').innerHTML = '';
+      break;
+    default:
+      termPrint("Comando desconocido.", "#ff4c4c");
+  }
+}
+
+// --- SISTEMA DE TOAST ---
+function showToast(msg, color) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.setProperty('--theme-color', color);
+  toast.innerHTML = `
+    <div class="toast-text">${msg}</div>
+    <div class="toast-close" onclick="this.parentElement.classList.add('hiding'); setTimeout(()=>this.parentElement.remove(), 400);">&times;</div>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    if(toast.parentElement) {
+      toast.classList.add('hiding');
+      setTimeout(() => toast.remove(), 400);
+    }
+  }, 3000);
+}
+
+// --- LOCAL STORAGE LOAD ---
+function loadSavedData() {
+  updateVoteUI();
+  
+  const savedBg = localStorage.getItem('embucladores_bg');
+  if(savedBg) {
+    applyBg(savedBg);
+  } else {
+    applyBg(bgs[0].id);
+  }
+
+  const savedMus = localStorage.getItem('embucladores_music');
+  if(savedMus) {
+      applyMusic(savedMus);
+      document.getElementById('bgMusic').pause(); 
+  } else {
+      const firstMus = document.getElementById('mcard-t1');
+      if(firstMus) firstMus.classList.add('selected');
+  }
+
+  const savedVol = localStorage.getItem('embucladores_vol');
+  if(savedVol !== null) setVolume(savedVol);
+
+  const savedPart = localStorage.getItem('embucladores_part');
+  if(savedPart !== null) {
+    const isPartActive = (savedPart === 'true');
+    document.getElementById('particle-toggle').checked = isPartActive;
+    particlesActive = isPartActive;
+  }
+}
+
+// --- CANVAS PARTICLES ---
+const c = document.getElementById('canvas');
+const ctx = c.getContext('2d');
+let W, H, ashes = [];
+let particlesActive = true;
+
+function resize(){ W=c.width=innerWidth; H=c.height=innerHeight; }
+function initPart(){
+  ashes=[];
+  for(let i=0;i<100;i++) ashes.push({ x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-0.5)*1, vy:Math.random()*1+0.5, size:Math.random()*2 });
+}
+function drawPart(){
+  requestAnimationFrame(drawPart);
+  if(!particlesActive) return;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = `rgba(255,255,255,0.3)`;
+  ashes.forEach(p=>{
+    p.y -= p.vy; p.x += p.vx; 
+    if(p.y < -10) p.y = H+10;
+    if(p.x < -10) p.x = W+10;
+    if(p.x > W+10) p.x = -10;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+  });
+}
+window.onresize=()=>{resize(); initPart();};
+resize(); initPart(); drawPart();
+
+// --- CONTROL DE VIDEO Y MÚSICA ---
+const glitchVideo = document.getElementById('glitch-video');
+const bgAudio = document.getElementById('bgMusic');
+
+if(glitchVideo && bgAudio) {
+  glitchVideo.addEventListener('play', () => bgAudio.pause());
+  glitchVideo.addEventListener('pause', () => bgAudio.play().catch(e => { console.log("Bloqueado") }));
+  glitchVideo.addEventListener('ended', () => bgAudio.play().catch(e => { console.log("Bloqueado") }));
+}
+
+</script>
+</body>
+</html>
