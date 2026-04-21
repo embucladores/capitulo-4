@@ -24,9 +24,8 @@
   --viajero-color: #ff6600; 
   --blanco-color: #ffffff;
   --rey-color: #5bb8e8;
-  --embucladores-color: #a855f7; /* Morado para Embucladores */
+  --embucladores-color: #a855f7;
 
-  /* Nuevos colores para la Terminal */
   --white-glow: #e0e0e0;
   --cel: #5bb8e8;
   --gold-glow: #ffd700;
@@ -94,7 +93,7 @@ html, body {
   50% {transform: translateY(-15px);} 
 }
 
-/* Scroll Global Activado (Terminal) */
+/* Scroll Global Activado */
 body.global-scroll-active { overflow-y: auto; height: auto; }
 body.global-scroll-active .app-container { height: auto; overflow: visible; }
 body.global-scroll-active .section { position: relative; height: auto; min-height: 100vh; overflow: visible; margin-bottom: 50px; }
@@ -189,11 +188,27 @@ body.global-scroll-active .section { position: relative; height: auto; min-heigh
   display: flex; gap: 10px; background: transparent; padding: 0;
 }
 .nav-item {
-  display: flex; flex-direction: column; align-items: center; padding: 5px 10px; transition: 0.3s; color: #aaa;
+  display: flex; flex-direction: column; align-items: center; padding: 5px 10px; transition: 0.3s; color: #aaa; position: relative;
 }
-.nav-item i { font-size: 1.2rem; margin-bottom: 3px; font-style: normal; }
+.nav-item i { font-size: 1.2rem; margin-bottom: 3px; font-style: normal; position: relative; }
 .nav-item span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
 .nav-item:hover, .nav-item.active { color: var(--theme-main); transform: scale(1.1); }
+
+/* NOTIFICACION DE MENSAJES */
+.nav-badge {
+  position: absolute;
+  top: -2px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  background: #ff4c4c;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ff4c4c;
+  display: none;
+}
+.nav-badge.active {
+  display: block;
+}
 
 @media (max-width: 768px) {
   .top-nav-wrapper { padding: 5px 10px; }
@@ -225,7 +240,6 @@ body.global-scroll-active .section { position: relative; height: auto; min-heigh
 /* ---------------- SECCIÓN: PERSONAJES ---------------- */
 .section-title { font-size: 2rem; color: #fff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 10px var(--theme-glow); text-align: center; border-bottom: 2px solid var(--theme-main); padding-bottom: 10px;}
 
-/* Filtros de Personajes */
 .char-filters { display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap; }
 .filter-btn {
   padding: 10px 25px; font-family: var(--font-main); font-size: 1rem; font-weight: bold; text-transform: uppercase;
@@ -244,10 +258,9 @@ body.global-scroll-active .section { position: relative; height: auto; min-heigh
   .char-card:nth-child(even) { flex-direction: row-reverse; }
 }
 
-/* --- ESTILOS DE IMAGEN DE PERSONAJES ACTUALIZADOS --- */
 .char-img-box {
   width: 100%; 
-  height: 250px; /* Alto fijo en móviles */
+  height: 250px; 
   background: rgba(0,0,0,0.5); 
   display: flex; 
   align-items: center; 
@@ -256,16 +269,16 @@ body.global-scroll-active .section { position: relative; height: auto; min-heigh
 }
 @media (min-width: 768px) { 
   .char-img-box { 
-    width: 350px; /* Ancho fijo forzado en PC */
-    height: 350px; /* Alto fijo forzado en PC */
+    width: 350px; 
+    height: 350px; 
     min-height: 350px; 
-    flex-shrink: 0; /* Evita que el contenedor se encoja por el contenido flex */
+    flex-shrink: 0; 
   } 
 }
 .char-img-box img { 
   width: 100%; 
   height: 100%; 
-  object-fit: contain; /* Ajusta la imagen sin deformarla */
+  object-fit: contain; 
   filter: drop-shadow(0 0 15px currentColor); 
   animation: float 4s infinite ease-in-out;
   will-change: transform;
@@ -283,7 +296,6 @@ body.global-scroll-active .section { position: relative; height: auto; min-heigh
 .voto-subtitle { font-size: 0.9rem; color: #a0d8f5; margin-bottom: 30px; letter-spacing: 1.5px; text-transform: uppercase; font-family: var(--font-text); font-weight: bold;}
 
 .fighters { display: flex; flex-direction: column; gap: 20px; }
-/* Grid actualizado a 4 columnas principales (7 con los separadores) para los 4 contendientes */
 @media (min-width: 900px) { .fighters { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items: center; } }
 .fighter { display: flex; flex-direction: column; align-items: center; padding: 20px; }
 .vs-divider { font-size: 1.8rem; color: var(--theme-main); opacity: 0.5; font-weight: 900; }
@@ -305,14 +317,21 @@ body.global-scroll-active .section { position: relative; height: auto; min-heigh
 /* ---------------- SECCIÓN: MENSAJES ---------------- */
 .msg-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 15px; }
 .msg-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-left: 4px solid var(--theme-main); border-radius: 6px; overflow: hidden; transition: 0.3s; }
+
+/* ESTADO DE MENSAJE NUEVO */
+.msg-card.is-new { border-left-color: #ff4c4c; border-color: #ff4c4c; box-shadow: 0 0 15px rgba(255, 76, 76, 0.3); }
+.msg-card.is-new .msg-header { background: rgba(255, 76, 76, 0.1); }
+.msg-card.is-new .msg-title { color: #ffb3b3; }
+
 .msg-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
 .msg-header:hover { background: rgba(255,255,255,0.05); }
-.msg-title { font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+.msg-title { font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 10px; transition: color 0.3s; }
 .msg-controls { display: flex; align-items: center; gap: 15px; }
 .msg-arrow { transition: transform 0.3s; color: var(--theme-main); font-size: 1.2rem; }
 .msg-card.expanded .msg-arrow { transform: rotate(180deg); }
 .msg-body { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); padding: 0 20px; }
-.msg-card.expanded .msg-body { max-height: 1000px; padding: 20px; transition: max-height 0.5s ease-in-out, padding 0.5s; border-top: 1px solid var(--border-light); }
+/* Se ha aumentado el max-height a 4000px para que el contenido multimedia y texto no se corten en móviles */
+.msg-card.expanded .msg-body { max-height: 4000px; padding: 20px; transition: max-height 0.5s ease-in-out, padding 0.5s; border-top: 1px solid var(--border-light); }
 .msg-text { font-family: var(--font-text); font-weight: 500; line-height: 1.6; font-size: 1.05rem; margin-bottom: 20px; color: #ddd;}
 .msg-media { width: 100%; border-radius: 8px; border: 1px solid var(--border-light); background: #000; object-fit: cover; }
 .msg-footer-text { text-align: center; margin-top: 40px; font-size: 0.9rem; color: #888; font-family: var(--font-text); font-weight: 600; letter-spacing: 1px; }
@@ -457,7 +476,10 @@ input:checked + .slider-toggle:before { transform: translateX(26px); }
     <div class="nav-item active" onclick="navTo('inicio')"><i>🏠</i><span>Inicio</span></div>
     <div class="nav-item" onclick="navTo('personajes')"><i>👥</i><span>Personajes</span></div>
     <div class="nav-item" onclick="navTo('duelo')"><i>⚔️</i><span>Rivalidad</span></div>
-    <div class="nav-item" onclick="navTo('mensajes')"><i>💬</i><span>Mensajes</span></div>
+    <div class="nav-item" onclick="navTo('mensajes')">
+      <i>💬<span id="msg-badge" class="nav-badge"></span></i>
+      <span>Mensajes</span>
+    </div>
   </div>
 </div>
 
@@ -474,6 +496,8 @@ input:checked + .slider-toggle:before { transform: translateX(26px); }
     <div class="char-filters">
       <button class="filter-btn active" data-target="amenazas" onclick="renderCharacters('amenazas')">Amenazas</button>
       <button class="filter-btn" data-target="embucladores" onclick="renderCharacters('embucladores')">Embucladores</button>
+      <button class="filter-btn" data-target="battlewoodienses" onclick="proximamente()">Battlewoodienses</button>
+
     </div>
 
     <div id="chars-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
@@ -531,8 +555,36 @@ input:checked + .slider-toggle:before { transform: translateX(26px); }
   <div class="section" id="sec-mensajes">
     <h1 class="section-title">Bandeja de Mensajes</h1>
     <div class="msg-container" id="msg-container">
+<div class="char-filters">
+  <button id="toggle-all-btn" class="filter-btn active" onclick="toggleAllMsg()">Expandir mensajes</button>
+</div>
+
       <div class="msg-card" id="msg-1">
         <div class="msg-header" onclick="toggleMsg('msg-1')">
+          <div class="msg-title">Transmisión sobre anomalías #2</div>
+          <div class="msg-controls"><div class="msg-arrow">▼</div></div>
+        </div>
+        <div class="msg-body">
+          <p class="msg-text">Buenas tardes señor Cyclo.  <br>
+No esperábamos escuchar su voz después de hace muchos meses, ya sabes, cuando dejó a su amigo Marra en nuestro Centro de Ayuda más importante en el Subterráneo. 
+Sorprende que haya utilizado su comunicador hacia nosotros como método de desahogo tras presenciar unas extrañas anomalías parpadeantes por los alrededores de la isla, ya que sabemos que se encuentra un poco perdido y ha utilizado el comunicador no siendo consciente de con quién hablaba.
+Y en parte, nos ha venido muy bien tu confusión, tenemos malas noticias para usted y sus antiguos compañeros, y es que... hemos encontrado a Marra sin vida en la cama, y no sabemos muy bien cómo ha sido su muerte, lo que intuimos es que se murió sin más... muy extraño todo, ¿no?
+Le intentamos informar semanas antes, pero desde que dejó a Marra en el centro por unas semanas para hacer cargos con los Siete, estuvimos muchísimos meses intentando contactar con usted para que recoja a Marra de una vez. 
+Eh... bueno... Señor Cyclo, espero que ahora sí podamos mantener contacto sobre esta situación, y conseguir hacer el funeral lo an--------__---_...
+<br><br>
+<p class="msg-text">...
+<br><br>
+<span class="spoiler" onclick="this.classList.toggle('revealed')"> Hace 2100 años, pudimos lograr hacer que la Realidad Cero se sienta "normal", dejando así nuestro control directo hacia el Punto Cero, para que gente con un poder sumamente inferior al nuestro pudiera vivir en paz y armonía.
+Lamentablemente, por culpa del destino, tuvieron que vivir en un bucle de desastres causados por la naturaleza del Punto Cero y diferentes amenazas, haciendo así, un final tras otro. 
+Parece ser, que este caso es completamente distinto: esto ya no es la naturaleza del Punto Cero, esto no es una amenaza directa... esto es un hecho que nunca debería haber ocurrido... 
+Algunas muertes de sujetos importantes, y acciones de otros, han causado este gran estrago: el final definitivo de la Realidad Cero y del Universo Cero...  </span></p>
+<br>
+      <img src="fin.webp" alt="cyclo" style="width: 100%; max-width: 400px; height: auto; aspect-ratio: 4/3; border-radius: 5%; margin-bottom: 10px; margin: auto; display: block;">
+        </div>
+      </div>
+
+            <div class="msg-card" id="msg-2">
+        <div class="msg-header" onclick="toggleMsg('msg-2')">
           <div class="msg-title">Transmisión sobre anomalías</div>
           <div class="msg-controls"><div class="msg-arrow">▼</div></div>
         </div>
@@ -640,7 +692,6 @@ if (window.matchMedia("(min-width: 769px)").matches) {
   }
   animateFollower();
 
-  // Aplicar efecto de hover dinámico
   const addHoverEffects = () => {
     document.querySelectorAll('button, a, input, .nav-item, .msg-header, .spoiler').forEach(el => {
       if(!el.dataset.hoverBound) {
@@ -650,27 +701,24 @@ if (window.matchMedia("(min-width: 769px)").matches) {
       }
     });
   };
-  // Ejecutar inicial y luego en un intervalo para los elementos renderizados dinámicamente
   setTimeout(addHoverEffects, 1000); 
   setInterval(addHoverEffects, 2000); 
 }
 
-
 // --- BASE DE DATOS DE PERSONAJES ---
 const charData = {
-  // --- AMENAZAS (Antes Rivales) ---
   viajero: { category: "amenazas", id: "viajero", name: "Viajero Oscuro", subtitle: "Visitante malicioso de otro mundo", img: "./viajero.png", color: "var(--viajero-color)", desc: "Variante del Viajero del Universo Cero. Esta vez, va por solitario con su nave, llegando así al país de Battlewood. Ya que quiere hacerse con los fragmentos divididos del Punto Cero para poder potenciar su nave, y poder huir hacia otros planetas... según él..." },
   victor: { category: "amenazas", id: "victor", name: "Victor Chávez", subtitle: "Magnate con reputación dudosa", img: "./victor.png", color: "var(--blanco-color)", desc: "Un hombre que le sobra el dinero debido a sus amañadas salas de juegos de apuesta, y a su oculto negocio de contrabando... el Punto Cero le ha hecho efecto a su cuerpo, y lo necesita para buscar una solución para arreglarse. Con métodos dudosos, obviamente." },
   rey: { category: "amenazas", id: "rey", name: "Rey Helado", subtitle: "Soberano del Reino de Hielo", img: "./rey.png", color: "var(--rey-color)", desc: "Variante del Rey Helado del Universo Cero. Esta vez, es el malvado rey del Reino Helado, y no podía no aprovecharse de la oportunidad de conseguir los fragmentos divididos de algo muy poderoso... Por eso, llegó al país acompañado de un glaciar con su castillo." },
   
-  // --- EMBUCLADORES ---
   embuclador1: { category: "embucladores", id: "embuclador1", name: "El Visitante", subtitle: "El mejor piloto de cohetes de los Siete, en su universo...", img: "./visitante.png", color: "#2A41C9", desc: "Nuestro querido compañero Visitante, también llamado Peter, ha sido uno de los elegidos en sobrevivir y viajar a otro universo. El problema de eso, es que ahora el espacio exterior para él, es completamente desconocido... Pero mira lo bueno, sigue siendo un visitante de otro mundo." },
   embuclador2: { category: "embucladores", id: "embuclador2", name: "La Fundación", subtitle: "Líder de los Siete, hace años...", img: "./fundacion.png", color: "#B6C21B", desc: "Después de tantos años de liderazgo y de proteger la realidad, la Fundación ya había asumido su retiro, teniendo una vida en paz después de siglos. Aunque no le duró mucho eso, ya que fue uno de los que sobrevivieron, y ahora tendrá que lidiar con otras amenazas con los Fragmentos del Punto Cero, y sin tener suficiente tecnología para enfrentarlos." },
   embuclador3: { category: "embucladores", id: "embuclador3", name: "Helios", subtitle: "El dios del movimiento, que pudo moverse a otro universo...", img: "./helios.png", color: "#ffc107", desc: "El Semi-Dios del movimiento, ahora como el verdadero Dios del movimiento, ha intentado madurar lo mejor posible para que parezca un dios de verdad. Pero debido a la gran catástrofe que ha ocurrido en la isla, el tío se ha vuelto otra vez loco por saber la noticia de que el Universo Cero va a destruirse. Por suerte, fue uno de los que sobrevivieron y pudo irse a otro universo, aunque con consecuencias... no tiene sus poderes de dios." },
-  embuclador4: { category: "embucladores", id: "embuclador4", name: "Pentaqus", subtitle: "El salvador y creador del reloj del multiverso", img: "./pentaqus.png", color: "#e83e8c", desc: "El amigable Dios del equilibrio, ha estado esperando por años la inminente destruccion del Universo Cero, en ese tiempo ha estado perfeccionando el metodo de escape, el reloj del multiverso. Sin un universo que alimente su poder, Pentaqus actualmente cuenta con los mismos poderes que un humano convencional, practicamente cero. Su objetivo ahora es recuperar los Fragmentos del Punto Cero que cayeron en el camino de huida, ¿Para que exactamente? Eso aún no se sabe." }
+  embuclador4: { category: "embucladores", id: "embuclador4", name: "Pentaqus", subtitle: "El salvador y creador del reloj del multiverso", img: "./pentaqus.png", color: "#e83e8c", desc: "El amigable Dios del equilibrio, ha estado esperando por años la inminente destruccion del Universo Cero, en ese tiempo ha estado perfeccionando el metodo de escape, el reloj del multiverso. Sin un universo que alimente su poder, Pentaqus actualmente cuenta con los mismos poderes que un humano convencional, practicamente cero. Su objetivo ahora es recuperar los Fragmentos del Punto Cero que cayeron en el camino de huida, ¿Para que exactamente? Eso aún no se sabe." },
+
+  
 };
 
-// --- BASE DE DATOS MÚSICA Y FONDOS ---
 const musicTracks = [
   { id: 't1', title: 'Tema del Capítulo 4', desc: 'Dale a reproducir, y busca los Fragmentos.', src: './Fortnite.mp3', img: './intro.png' },
   { id: 't2', title: 'Rivalidad', desc: 'Estamos metidos en medio de una gran rivalidad....', src: './rival.mp3', img: './rivalnormal.jpg' },
@@ -686,6 +734,28 @@ const bgs = [
   { id: 'bg5', title: 'Clasismo Cero', desc: 'Confíad en mí, y seréis extremadamente ricos.', src: './vegas.webp' }
 ];
 
+// --- GESTIÓN DE MENSAJES Y NOTIFICACIONES ---
+let seenMessages = JSON.parse(localStorage.getItem('embucladores_seen_msgs') || '[]');
+
+function checkNewMessages() {
+  const messages = document.querySelectorAll('.msg-card');
+  let hasNew = false;
+  
+  messages.forEach(msg => {
+    if (!seenMessages.includes(msg.id)) {
+      msg.classList.add('is-new');
+      hasNew = true;
+    }
+  });
+  
+  const badge = document.getElementById('msg-badge');
+  if (hasNew) {
+    badge.classList.add('active');
+  } else {
+    badge.classList.remove('active');
+  }
+}
+
 // --- INICIALIZACIÓN Y CARGA ---
 window.onload = () => {
   let bar = document.getElementById('load-bar');
@@ -696,9 +766,10 @@ window.onload = () => {
     btn.classList.add('ready'); 
   }, 1500);
 
-  renderCharacters('amenazas'); // Por defecto cargan las amenazas
+  renderCharacters('amenazas');
   renderSettings();
   loadSavedData();
+  checkNewMessages();
 };
 
 function enterSite() {
@@ -739,7 +810,6 @@ function renderCharacters(filterCategory) {
   const container = document.getElementById('chars-container');
   container.innerHTML = ''; 
   
-  // Actualizar estado de los botones
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.remove('active');
     if (btn.dataset.target === filterCategory) btn.classList.add('active');
@@ -777,17 +847,76 @@ function goToCharacter(charId) {
   }, 500);
 }
 
+// --- GESTIÓN DE MENSAJES INDIVIDUALES ---
+function updateToggleBtnText() {
+  const btn = document.getElementById('toggle-all-btn');
+  if (!btn) return;
+
+  const messages = document.querySelectorAll('.msg-card');
+  const expandedCount = document.querySelectorAll('.msg-card.expanded').length;
+
+  if (expandedCount === 0) {
+    btn.innerText = "Expandir mensajes";
+  } else {
+    btn.innerText = "Contraer mensajes";
+  }
+}
+
 function toggleMsg(id) {
   const msg = document.getElementById(id);
   msg.classList.toggle('expanded');
+  
+  // Marcar como visto al expandir
+  if (msg.classList.contains('is-new')) {
+    msg.classList.remove('is-new');
+    if (!seenMessages.includes(id)) {
+      seenMessages.push(id);
+      localStorage.setItem('embucladores_seen_msgs', JSON.stringify(seenMessages));
+    }
+    checkNewMessages();
+  }
+  
+  updateToggleBtnText(); 
+}
+
+function toggleAllMsg() {
+  const messages = document.querySelectorAll('.msg-card');
+  const expandedCount = document.querySelectorAll('.msg-card.expanded').length;
+  const expandAll = (expandedCount === 0);
+
+  messages.forEach(msg => {
+    if (expandAll) {
+      msg.classList.add('expanded');
+      // Marcar como visto al expandir todo
+      if (msg.classList.contains('is-new')) {
+        msg.classList.remove('is-new');
+        if (!seenMessages.includes(msg.id)) {
+          seenMessages.push(msg.id);
+        }
+      }
+    } else {
+      msg.classList.remove('expanded');
+    }
+  });
+
+  if (expandAll) {
+    localStorage.setItem('embucladores_seen_msgs', JSON.stringify(seenMessages));
+    checkNewMessages();
+  }
+
+  updateToggleBtnText();
 }
 
 // --- SISTEMA DE VOTOS ---
 function castVote(charId) {
+  const currentVote = localStorage.getItem('embucladores_voto');
+  
+  // Si ya ha votado por este personaje, no hacemos nada (evita notificaciones infinitas)
+  if (currentVote === charId) return;
+
   localStorage.setItem('embucladores_voto', charId);
   updateVoteUI();
   
-  // Tratamos el caso del grupo "Embucladores" para coger su propio nombre y color de la variable CSS
   let name = charId === 'embucladores' ? 'Los Embucladores' : charData[charId].name;
   let color = charId === 'embucladores' ? 'var(--embucladores-color)' : charData[charId].color;
   
@@ -798,6 +927,10 @@ function removeVote() {
   localStorage.removeItem('embucladores_voto');
   updateVoteUI();
   showToast("Voto eliminado", "#ff4c4c");
+}
+
+function proximamente() {
+  showToast("Próximamente...", "#ffc107");
 }
 
 function updateVoteUI() {
@@ -813,7 +946,6 @@ function updateVoteUI() {
     const btn = document.getElementById('vote-' + saved);
     if(btn) {
       btn.classList.add('active');
-      // Plural para los Embucladores
       if (saved === 'embucladores') {
           btn.innerText = 'SE LOS QUEDARÁN ELLOS';
       } else {
@@ -983,7 +1115,6 @@ function runCmd() {
       break;
 
     case '/vote':
-      // Se agregó 'embucladores' para que la terminal reconozca el voto
       if(['viajero','victor','rey','embucladores'].includes(args[1])) {
         castVote(args[1]); termPrint("Voto forzado: " + args[1], "var(--theme-main)");
       } else termPrint("Rival inválido.", "#ff4c4c");
